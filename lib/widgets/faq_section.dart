@@ -9,7 +9,7 @@ class FAQSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 64, vertical: 112),
+      padding: EdgeInsets.symmetric(horizontal: 64, vertical: 10),
       color: Color(0xFF07130E),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
