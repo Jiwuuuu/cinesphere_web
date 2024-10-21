@@ -13,7 +13,7 @@ class HeroSection extends StatelessWidget {
     return Column(
       children: [
         Container(
-          padding: EdgeInsets.symmetric(horizontal: 64, vertical: 112),
+          padding: EdgeInsets.symmetric(horizontal: 64, vertical: 100),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
