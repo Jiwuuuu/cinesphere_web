@@ -28,7 +28,7 @@ class FeaturesSection extends StatelessWidget {
             child: FeatureItem(
               title: 'Real-Time Seat Selection',
               description: 'Choose your preferred seats with our interactive seating chart that updates in real time based on availability.',
-              imagePath: 'assets/images/Logo.png',
+              imagePath: 'assets/images/realtime_seatselection.png',
             ),
           ),
           SizedBox(height: 16),
@@ -36,7 +36,7 @@ class FeaturesSection extends StatelessWidget {
             child: FeatureItem(
               title: 'Secure Payment Methods',
               description: 'Pay for your tickets with a variety of secure payment options, ensuring your transactions are quick and safe.',
-              imagePath: 'assets/images/Logo.png',
+              imagePath: 'assets/images/secure_payment_methods.png',
             ),
           ),
           SizedBox(height: 16),

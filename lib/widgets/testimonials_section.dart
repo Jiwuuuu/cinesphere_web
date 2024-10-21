@@ -17,7 +17,7 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 64, vertical: 112),
+      padding: EdgeInsets.symmetric(horizontal: 32, vertical: 40),
       color: Color(0xFF07130E),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -31,7 +31,7 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
               fontWeight: FontWeight.w700,
             ),
           ),
-          SizedBox(height: 24),
+          SizedBox(height: 16),
           Text(
             'What our users are saying about CineSphere! Hear from movie lovers who have experienced the ease and convenience of booking with us.',
             textAlign: TextAlign.center,
@@ -41,14 +41,14 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
               fontWeight: FontWeight.w400,
             ),
           ),
-          SizedBox(height: 24),
+          SizedBox(height: 16),
           CarouselSlider(
             options: CarouselOptions(
               height: 350,
               autoPlay: true,
               enlargeCenterPage: true,
-              aspectRatio: 16 / 9,
-              viewportFraction: 0.5,
+              aspectRatio: 18 / 9,
+              viewportFraction: 0.35,
               onPageChanged: (index, reason) {
                 setState(() {
                   _currentIndex = index;
@@ -58,7 +58,7 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
             items: [
               // Feedback 1
               Container(
-                width: 400,
+                width: 450,
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   border: Border.all(color: Color(0xFFE2F1EB)),
@@ -87,7 +87,7 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
                           radius: 24,
                           child: Icon(Icons.person, color: Color(0xFF07130E)),
                         ),
-                        SizedBox(width: 16),
+                        SizedBox(width: 12),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -116,8 +116,8 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
               ),
               // Feedback 2
               Container(
-                width: 400,
-                padding: EdgeInsets.all(16),
+                width: 450,
+                padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   border: Border.all(color: Color(0xFFE2F1EB)),
                   borderRadius: BorderRadius.circular(8),
@@ -145,7 +145,7 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
                           radius: 24,
                           child: Icon(Icons.person, color: Color(0xFF07130E)),
                         ),
-                        SizedBox(width: 16),
+                        SizedBox(width: 12),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -174,7 +174,7 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
               ),
               // Feedback 3
               Container(
-                width: 400,
+                width: 450,
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   border: Border.all(color: Color(0xFFE2F1EB)),
