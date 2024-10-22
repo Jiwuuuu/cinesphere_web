@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import './widgets/navbar.dart';
 import './widgets/hero_section.dart';
-import './widgets/browse_movies_section.dart';
 import './widgets/features_section.dart';
 import './widgets/testimonials_section.dart';
 import './widgets/faq_section.dart';
@@ -36,7 +35,6 @@ class _DesktopCinesphereState extends State<DesktopCinesphere> {
 
   // Define keys for each section
   final GlobalKey _heroKey = GlobalKey();
-  final GlobalKey _browseMoviesKey = GlobalKey();
   final GlobalKey _featuresKey = GlobalKey();
   final GlobalKey _faqKey = GlobalKey();
   final GlobalKey _testimonialsKey = GlobalKey();
@@ -79,9 +77,7 @@ class _DesktopCinesphereState extends State<DesktopCinesphere> {
                 SizedBox(height: 20),
                 HeroSection(key: _heroKey),  // Add the required key
                 SizedBox(height: 40),
-                BrowseMoviesSection(key: _browseMoviesKey),  // Add the required key
-                SizedBox(height: 40),
-                FeaturesSection(key: _featuresKey),
+                FeaturesSection(key: _featuresKey), // Use the updated FeaturesSection here
                 SizedBox(height: 40),
                 TestimonialsSection(key: _testimonialsKey),
                 SizedBox(height: 40),
