@@ -17,7 +17,7 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 40),
       color: Color(0xFF07130E),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -27,7 +27,7 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
             textAlign: TextAlign.center,
             style: GoogleFonts.lexend(
               color: Color(0xFFE2F1EB),
-              fontSize: 48,
+              fontSize: 32,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -37,18 +37,18 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
             textAlign: TextAlign.center,
             style: GoogleFonts.lexendDeca(
               color: Color(0xFFE2F1EB),
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.w400,
             ),
           ),
           SizedBox(height: 16),
           CarouselSlider(
             options: CarouselOptions(
-              height: 350,
+              height: 400,
               autoPlay: true,
               enlargeCenterPage: true,
-              aspectRatio: 18 / 9,
-              viewportFraction: 0.35,
+              aspectRatio: 16 / 9,
+              viewportFraction: 0.8,
               onPageChanged: (index, reason) {
                 setState(() {
                   _currentIndex = index;
@@ -58,7 +58,9 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
             items: [
               // Feedback 1
               Container(
-                width: 450,
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.9,
+                ),
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   border: Border.all(color: Color(0xFFE2F1EB)),
@@ -75,7 +77,7 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
                       '"Booking my movie tickets has never been easier. The real-time seat selection is a game-changer!"',
                       style: GoogleFonts.lexendDeca(
                         color: Color(0xFFE2F1EB),
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.w400,
                       ),
                     ),
@@ -95,7 +97,7 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
                               'Marie D.',
                               style: GoogleFonts.lexend(
                                 color: Color(0xFFE2F1EB),
-                                fontSize: 16,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -103,7 +105,7 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
                               'Entertainment Blogger',
                               style: GoogleFonts.lexend(
                                 color: Color(0xFFE2F1EB),
-                                fontSize: 16,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w400,
                               ),
                             ),
@@ -116,8 +118,10 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
               ),
               // Feedback 2
               Container(
-                width: 450,
-                padding: EdgeInsets.all(12),
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.9,
+                ),
+                padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   border: Border.all(color: Color(0xFFE2F1EB)),
                   borderRadius: BorderRadius.circular(8),
@@ -133,7 +137,7 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
                       '"CineSphere has made family movie nights so much simpler. No more long queues or last-minute bookings!"',
                       style: GoogleFonts.lexendDeca(
                         color: Color(0xFFE2F1EB),
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.w400,
                       ),
                     ),
@@ -153,7 +157,7 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
                               'Jason R.',
                               style: GoogleFonts.lexend(
                                 color: Color(0xFFE2F1EB),
-                                fontSize: 16,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -161,7 +165,7 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
                               'Father of Two',
                               style: GoogleFonts.lexend(
                                 color: Color(0xFFE2F1EB),
-                                fontSize: 16,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w400,
                               ),
                             ),
@@ -174,7 +178,9 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
               ),
               // Feedback 3
               Container(
-                width: 450,
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.9,
+                ),
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   border: Border.all(color: Color(0xFFE2F1EB)),
@@ -191,7 +197,7 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
                       '"I love the seat selection feature! It’s so convenient to see available seats and book instantly!"',
                       style: GoogleFonts.lexendDeca(
                         color: Color(0xFFE2F1EB),
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.w400,
                       ),
                     ),
@@ -203,7 +209,7 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
                           radius: 24,
                           child: Icon(Icons.person, color: Color(0xFF07130E)),
                         ),
-                        SizedBox(width: 16),
+                        SizedBox(width: 12),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -211,7 +217,7 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
                               'Samantha G.',
                               style: GoogleFonts.lexend(
                                 color: Color(0xFFE2F1EB),
-                                fontSize: 16,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -219,7 +225,7 @@ class _TestimonialsSectionState extends State<TestimonialsSection> {
                               'Film Enthusiast',
                               style: GoogleFonts.lexend(
                                 color: Color(0xFFE2F1EB),
-                                fontSize: 16,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w400,
                               ),
                             ),

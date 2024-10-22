@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'adminLogin.dart';
 
 class Footer extends StatelessWidget {
   final GlobalKey key;
@@ -56,6 +57,22 @@ class Footer extends StatelessWidget {
                 onPressed: () {},
                 child: Text(
                   'Cookies Settings',
+                  style: GoogleFonts.lexend(
+                    color: Color(0xFFE2F1EB),
+                    fontSize: 14,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginPage()),
+                  );
+                },
+                child: Text(
+                  'Login as Admin?',
                   style: GoogleFonts.lexend(
                     color: Color(0xFFE2F1EB),
                     fontSize: 14,
