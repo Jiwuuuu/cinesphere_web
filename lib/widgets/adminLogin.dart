@@ -1,7 +1,88 @@
+import 'package:cinesphere_web/admins/admin_dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class LoginPage extends StatelessWidget {
+
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final supabase = Supabase.instance.client;
+
+void _loginAdmin() async {
+  final email = _emailController.text.trim();
+  final password = _passwordController.text.trim();
+
+  if (email.isEmpty || password.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Please enter both email and password')),
+    );
+    return;
+  }
+
+  try {
+    // Authenticate the user with Supabase
+    final response = await supabase.auth.signInWithPassword(
+      email: email,
+      password: password,
+    );
+
+    // If the user is authenticated successfully
+    if (response.session != null) {
+      final userId = response.user?.id;
+
+      if (userId != null) {
+        // Query the admins table to check if the logged-in user is a super admin
+        final adminResponse = await supabase
+            .from('admins')
+            .select()
+            .eq('id', userId)
+            .single();
+
+        // Extract data from the response
+        final data = adminResponse;
+
+        // Check if the admin is a super admin
+        final isSuperAdmin = data['is_super_admin'] == true;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login successful')),
+        );
+
+        // Navigate to the Admin Dashboard with the `isSuperAdmin` flag
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AdminDashboardPage(isSuperAdmin: isSuperAdmin),
+          ),
+        );
+            }
+    } else {
+      // Handle the case where authentication fails
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Login failed: Invalid email or password')),
+      );
+    }
+  } catch (error) {
+    // Handle unexpected errors
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Login failed: $error')),
+    );
+  }
+}
+
+
+
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,10 +146,11 @@ class LoginPage extends StatelessWidget {
                   ),
                   SizedBox(height: 32),
                   TextField(
-                    style: TextStyle(color: Colors.white),
+                    controller: _emailController,
+                    style: GoogleFonts.lexendDeca(color: Colors.white),
                     decoration: InputDecoration(
-                      labelText: 'Username',
-                      labelStyle: TextStyle(color: Colors.white70),
+                      labelText: 'Email',
+                      labelStyle: GoogleFonts.lexendDeca(color: Colors.white70),
                       filled: true,
                       fillColor: Color(0xFF2C3A36),
                       border: OutlineInputBorder(
@@ -79,11 +161,12 @@ class LoginPage extends StatelessWidget {
                   ),
                   SizedBox(height: 16),
                   TextField(
+                    controller: _passwordController,
                     obscureText: true,
-                    style: TextStyle(color: Colors.white),
+                    style: GoogleFonts.lexendDeca(color: Colors.white),
                     decoration: InputDecoration(
                       labelText: 'Password',
-                      labelStyle: TextStyle(color: Colors.white70),
+                      labelStyle: GoogleFonts.lexendDeca(color: Colors.white70),
                       filled: true,
                       fillColor: Color(0xFF2C3A36),
                       border: OutlineInputBorder(
@@ -94,11 +177,9 @@ class LoginPage extends StatelessWidget {
                   ),
                   SizedBox(height: 32),
                   ElevatedButton(
-                    onPressed: () {
-                      // Add login logic here
-                    },
+                    onPressed: _loginAdmin,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF00C853),
+                      backgroundColor: Color(0xFF8CDDBB),
                       minimumSize: Size(double.infinity, 49),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -106,7 +187,7 @@ class LoginPage extends StatelessWidget {
                     ),
                     child: Text(
                       'Login',
-                      style: GoogleFonts.lexend(
+                      style: GoogleFonts.lexendDeca(
                         color: Colors.black,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,

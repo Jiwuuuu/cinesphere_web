@@ -1,3 +1,4 @@
+import 'package:cinesphere_web/widgets/adminLogin.dart';
 import 'package:flutter/material.dart';
 import './widgets/navbar.dart';
 import './widgets/hero_section.dart';
@@ -5,8 +6,12 @@ import './widgets/features_section.dart';
 import './widgets/testimonials_section.dart';
 import './widgets/faq_section.dart';
 import './widgets/footer.dart';
+import './supabase/supabase.dart';
+import './admins/admin_dashboard.dart'; // Import your new Admin Dashboard page
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initSupabase();
   runApp(CineSphereWeb());
 }
 
@@ -17,7 +22,22 @@ class CineSphereWeb extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: DesktopCinesphere(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => DesktopCinesphere(),
+        '/login': (context) => LoginPage(),
+      },
+      onGenerateRoute: (settings) {
+        if (settings.name == '/admin_dashboard') {
+          final args = settings.arguments as Map<String, dynamic>;
+          final isSuperAdmin = args['isSuperAdmin'] ?? false;
+
+          return MaterialPageRoute(
+            builder: (context) => AdminDashboardPage(isSuperAdmin: isSuperAdmin),
+          );
+        }
+        return null;
+      },
     );
   }
 }
@@ -67,14 +87,7 @@ class _DesktopCinesphereState extends State<DesktopCinesphere> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Navbar(
-                  scrollController: _scrollController,
-                  featuresKey: _featuresKey,
-                  faqKey: _faqKey,
-                  testimonialsKey: _testimonialsKey,
-                  contactKey: _contactKey,
-                ),
-                SizedBox(height: 20),
+                SizedBox(height: 80), // Height for fixed navbar
                 HeroSection(key: _heroKey),  // Add the required key
                 SizedBox(height: 40),
                 FeaturesSection(key: _featuresKey), // Use the updated FeaturesSection here
@@ -86,6 +99,14 @@ class _DesktopCinesphereState extends State<DesktopCinesphere> {
                 Footer(key: _contactKey),
               ],
             ),
+          ),
+          // Fixed navbar at the top
+          Navbar(
+            scrollController: _scrollController,
+            featuresKey: _featuresKey,
+            faqKey: _faqKey,
+            testimonialsKey: _testimonialsKey,
+            contactKey: _contactKey,
           ),
           if (_showScrollToTopButton)
             Positioned(

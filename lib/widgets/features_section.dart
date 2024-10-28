@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class FeaturesSection extends StatelessWidget {
+  @override
   final GlobalKey key;
 
   const FeaturesSection({required this.key}) : super(key: key);
@@ -79,7 +80,7 @@ class FeatureWithImage extends StatelessWidget {
   final List<String> benefits;
   final bool isImageRight;
 
-  FeatureWithImage({
+  const FeatureWithImage({super.key, 
     required this.title,
     required this.description,
     required this.imagePath,
