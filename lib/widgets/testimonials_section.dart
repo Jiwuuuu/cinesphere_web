@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 
 class TestimonialsSection extends StatefulWidget {
+  @override
   final GlobalKey key;
 
   const TestimonialsSection({required this.key}) : super(key: key);

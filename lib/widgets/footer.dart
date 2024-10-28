@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'adminLogin.dart';
 
 class Footer extends StatelessWidget {
+  @override
   final GlobalKey key;
 
   const Footer({required this.key}) : super(key: key);

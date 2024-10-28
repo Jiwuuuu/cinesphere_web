@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class FAQSection extends StatelessWidget {
+  @override
   final GlobalKey key;
 
   const FAQSection({required this.key}) : super(key: key);
@@ -55,7 +56,7 @@ class FAQItem extends StatefulWidget {
   final String question;
   final String answer;
 
-  FAQItem({required this.question, required this.answer});
+  const FAQItem({super.key, required this.question, required this.answer});
 
   @override
   _FAQItemState createState() => _FAQItemState();
