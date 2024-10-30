@@ -1,11 +1,13 @@
 import 'package:cinesphere_web/admins/create_admin.dart';
 import 'package:cinesphere_web/admins/view_transactions.dart';
+import 'package:cinesphere_web/admins/manage_bookings.dart';
+import 'package:cinesphere_web/admins/manage_seats.dart';
+import 'package:cinesphere_web/admins/cinema_settings_management.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'manage_movies.dart';
-
 
 class AdminDashboardPage extends StatefulWidget {
   final bool isSuperAdmin;
@@ -170,7 +172,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               style: GoogleFonts.lexend(
                 fontSize: 30,
                 color: Color(0xFFE2F1EB)
-                ),
+              ),
             ),
           ],
         ),
@@ -205,7 +207,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     ),
                     SizedBox(height: 24),
 
-                    // Button to Create Admin visible only for Super Admins
                     if (widget.isSuperAdmin) ...[
                       ElevatedButton.icon(
                         onPressed: () {
@@ -234,7 +235,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       SizedBox(height: 16),
                     ],
 
-                    // Button to Manage Movies (Visible for all admins)
                     ElevatedButton.icon(
                       onPressed: () {
                         Navigator.push(
@@ -261,10 +261,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     ),
                     SizedBox(height: 16),
 
-                    // Button to Manage Bookings (Visible for all admins)
+                    // Navigation button to Manage Bookings page
                     ElevatedButton.icon(
                       onPressed: () {
-                        // Add navigation to Booking Management Page
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => ManageBookingsPage()),
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
@@ -285,10 +288,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     ),
                     SizedBox(height: 16),
 
-                    // Button to Manage Seats (Visible for all admins)
+                    // Navigation button to Manage Seats page
                     ElevatedButton.icon(
                       onPressed: () {
-                        // Add navigation to Seat Management Page
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => ManageSeatsPage(cinemaSettingsId: "YOUR_CINEMA_SETTINGS_ID")), // Replace with dynamic ID if available
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
@@ -309,7 +315,33 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     ),
                     SizedBox(height: 16),
 
-                    // Button to View Transactions (Visible for all admins)
+                    // Navigation button to Cinema Settings Management page
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => CinemaSettingsManagementPage()),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        side: BorderSide(color: Color(0xFF8CDDBB)),
+                        minimumSize: Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      icon: Icon(Icons.settings, color: Color(0xFF8CDDBB)),
+                      label: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Manage Cinema Settings',
+                          style: GoogleFonts.lexend(color: Color(0xFF8CDDBB)),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+
                     ElevatedButton.icon(
                       onPressed: () {
                         Navigator.push(
@@ -335,15 +367,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       ),
                     ),
                     Spacer(),
-                    // Logout Button at the bottom of the sidebar
                     ElevatedButton.icon(
                       onPressed: () async {
                         await supabase.auth.signOut();
                         Navigator.of(context).pushReplacementNamed('/login');
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent, // Transparent background
-                        side: BorderSide(color: Color(0xFF8CDDBB)), // Stroke color
+                        backgroundColor: Colors.transparent,
+                        side: BorderSide(color: Color(0xFF8CDDBB)),
                         minimumSize: Size(double.infinity, 50),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -354,12 +385,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         alignment: Alignment.centerLeft,
                         child: Text(
                           'Logout',
-                          style: GoogleFonts.lexend(color: Color(0xFF8CDDBB)), // Change button text color here
+                          style: GoogleFonts.lexend(color: Color(0xFF8CDDBB)),
                         ),
                       ),
                     ),
-
-                    // Copyright Text
                     Padding(
                       padding: const EdgeInsets.only(top: 16.0),
                       child: Align(

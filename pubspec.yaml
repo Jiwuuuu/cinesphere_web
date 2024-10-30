@@ -44,7 +44,9 @@ dependencies:
   syncfusion_flutter_charts: ^22.1.34
   qr_code_scanner: ^0.7.0
   mobile_scanner: ^3.4.0
-
+  image_picker: ^0.8.4+4
+  path: ^1.8.0
+  file_picker: ^5.0.0
 
 dev_dependencies:
   flutter_test:

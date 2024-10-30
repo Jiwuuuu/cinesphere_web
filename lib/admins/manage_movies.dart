@@ -1,6 +1,8 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:file_picker/file_picker.dart';
 
 class ManageMoviesPage extends StatefulWidget {
   const ManageMoviesPage({super.key});
@@ -11,10 +13,21 @@ class ManageMoviesPage extends StatefulWidget {
 
 class _ManageMoviesPageState extends State<ManageMoviesPage> {
   final supabase = Supabase.instance.client;
-
+  final titleController = TextEditingController();
+  final descriptionController = TextEditingController();
+  final genreController = TextEditingController();
+  final castController = TextEditingController();
+  final trailerLinkController = TextEditingController();
+  final directorController = TextEditingController();
+  final posterUrlController = TextEditingController();  // For manual URL entry
+  
   List<dynamic> movies = [];
   String currentCategory = 'Now Showing';
-  bool _isAddMoviePanelVisible = false; // State variable to control visibility
+  bool _isAddMoviePanelVisible = false;
+  String? selectedStatus;
+  String? selectedImageName;
+  Uint8List? selectedImageBytes;
+  bool useUrlForPoster = false;  // Toggle between upload and URL input
 
   @override
   void initState() {
@@ -22,28 +35,37 @@ class _ManageMoviesPageState extends State<ManageMoviesPage> {
     _fetchMovies();
   }
 
+  @override
+  void dispose() {
+    titleController.dispose();
+    descriptionController.dispose();
+    genreController.dispose();
+    castController.dispose();
+    trailerLinkController.dispose();
+    directorController.dispose();
+    posterUrlController.dispose();
+    super.dispose();
+  }
+
   void _fetchMovies() async {
     final response = await supabase
         .from('movies')
         .select()
-        .eq('status', currentCategory); // Fetch only movies in the current category
+        .eq('status', currentCategory);
 
-    if (response.isNotEmpty) {
-      setState(() {
-        movies = response;
-      });
-    }
+    setState(() {
+      movies = response ?? [];
+    });
   }
 
-  void _addMovie(
+  Future<void> _addMovie(
     String title,
     String description,
     String genre,
     List<String> cast,
     String trailerLink,
-    String posterUrl,
     String director,
-    String status,
+    String posterUrl,
   ) async {
     try {
       final response = await supabase.from('movies').insert({
@@ -54,46 +76,107 @@ class _ManageMoviesPageState extends State<ManageMoviesPage> {
         'trailer_link': trailerLink,
         'poster_url': posterUrl,
         'director': director,
-        'status': status,
-      });
+        'status': selectedStatus,
+      }).select();
 
-      if (response.error == null) {
+      if (response.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Movie added successfully')),
         );
-        _fetchMovies(); // Refresh movie list after insertion
+        _fetchMovies();
         setState(() {
-          _isAddMoviePanelVisible = false; // Hide the add movie panel after successful addition
+          _isAddMoviePanelVisible = false;
         });
+        // Clear input fields
+        titleController.clear();
+        descriptionController.clear();
+        genreController.clear();
+        castController.clear();
+        trailerLinkController.clear();
+        directorController.clear();
+        posterUrlController.clear();
+        selectedStatus = null;
+        selectedImageBytes = null;
+        selectedImageName = null;
+        useUrlForPoster = false;
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add movie: \${response.error?.message}')),
-        );
+        throw Exception('Failed to add movie.');
       }
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred while adding the movie: \$error')),
+        SnackBar(content: Text('Movie added successfully')),
+      );
+    }
+  }
+
+  Future<String> _uploadImageToSupabase(Uint8List imageBytes, String status, String fileName) async {
+    try {
+      String folderName = '';
+      switch (status) {
+        case 'Now Showing':
+          folderName = 'Now Showing';
+          break;
+        case 'Advance Selling':
+          folderName = 'Advance Selling';
+          break;
+        case 'Coming Soon':
+          folderName = 'Coming Soon';
+          break;
+      }
+
+      final response = await supabase.storage
+          .from('posters')
+          .uploadBinary('$folderName/$fileName', imageBytes);
+
+      if (response.isEmpty) {
+        final String publicUrl = supabase.storage
+            .from('posters')
+            .getPublicUrl('$folderName/$fileName');
+        return publicUrl;
+      } else {
+        throw Exception('Image upload failed');
+      }
+    } catch (e) {
+      throw Exception('Error uploading image: $e');
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      allowMultiple: false,
+    );
+
+    if (result != null && result.files.isNotEmpty) {
+      setState(() {
+        selectedImageBytes = result.files.first.bytes;
+        selectedImageName = result.files.first.name;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Poster selected: $selectedImageName')),
+        );
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No poster selected')),
       );
     }
   }
 
   void _deleteMovie(String id) async {
     try {
-      final response = await supabase.from('movies').delete().eq('id', id);
+      final response = await supabase.from('movies').delete().eq('id', id).select();
 
-      if (response.error == null) {
+      if (response.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Movie deleted successfully')),
         );
-        _fetchMovies(); // Refresh the list after deletion
+        _fetchMovies();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete movie: \${response.error?.message}')),
-        );
+        throw Exception('Failed to delete movie.');
       }
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred while deleting the movie: \$error')),
+        SnackBar(content: Text('An error occurred: $error')),
       );
     }
   }
@@ -107,15 +190,6 @@ class _ManageMoviesPageState extends State<ManageMoviesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final titleController = TextEditingController();
-    final descriptionController = TextEditingController();
-    final genreController = TextEditingController();
-    final castController = TextEditingController();
-    final trailerLinkController = TextEditingController();
-    final posterUrlController = TextEditingController();
-    final directorController = TextEditingController();
-    final statusController = TextEditingController();
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(0xFF07130E),
@@ -161,217 +235,94 @@ class _ManageMoviesPageState extends State<ManageMoviesPage> {
             SizedBox(height: 16),
             Expanded(
               child: Center(
-                child: SizedBox(
-                  width: MediaQuery.of(context).size.width > 600
-                      ? MediaQuery.of(context).size.width * 0.5
-                      : MediaQuery.of(context).size.width * 0.9, // Set width based on screen size for responsiveness
-                  child: ListView.builder(
-                    itemCount: movies.length,
-                    itemBuilder: (context, index) {
-                      final movie = movies[index];
-                      return Card(
-                        color: Color(0xFF07130E),
-                        elevation: 0,
-                        margin: const EdgeInsets.symmetric(vertical: 12.0),
-                        shape: RoundedRectangleBorder(
-                          side: BorderSide(color: Color(0xFFE2F1EB).withOpacity(0.5), width: 2), // Add blurred stroke
-                          borderRadius: BorderRadius.circular(8.0),
+                child: ListView.builder(
+                  itemCount: movies.length,
+                  itemBuilder: (context, index) {
+                    final movie = movies[index];
+                    return Card(
+                      color: Color(0xFF07130E),
+                      elevation: 0,
+                      margin: const EdgeInsets.symmetric(vertical: 12.0),
+                      shape: RoundedRectangleBorder(
+                        side: BorderSide(color: Color(0xFFE2F1EB).withOpacity(0.5), width: 2),
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      child: ListTile(
+                        title: Text(movie['title'], style: TextStyle(color: Color(0xFFE2F1EB))),
+                        subtitle: Text(movie['description'], maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: Color(0xFFE2F1EB))),
+                        trailing: IconButton(
+                          icon: Icon(Icons.delete, color: Colors.red),
+                          onPressed: () => _deleteMovie(movie['id']),
                         ),
-                        child: Container(
-                          height: 200,
-                          padding: const EdgeInsets.all(12.0),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 150, // Adjust width of the poster image
-                                height: double.infinity,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  image: DecorationImage(
-                                    image: NetworkImage(movie['poster_url']),
-                                    fit: BoxFit.cover, // Ensures the image covers the entire container
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 16), // Add space between the image and text
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      movie['title'],
-                                      style: TextStyle(
-                                        fontSize: 24, // Adjust the font size for the title
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFFE2F1EB),
-                                      ),
-                                    ),
-                                    SizedBox(height: 8),
-                                    Text(
-                                      movie['description'],
-                                      maxLines: 3,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontSize: 18, // Adjust the font size for the description
-                                        color: Color(0xFFE2F1EB),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.delete, color: Colors.red),
-                                onPressed: () {
-                                  _deleteMovie(movie['id']);
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
-            SizedBox(height: 16),
-            if (_isAddMoviePanelVisible) // Display the add movie panel based on visibility
+            if (_isAddMoviePanelVisible)
               Column(
                 children: [
-                  TextField(
-                    controller: titleController,
-                    style: TextStyle(color: Color(0xFFE2F1EB)),
-                    decoration: InputDecoration(
-                      labelText: 'Movie Title',
-                      labelStyle: TextStyle(color: Color(0xFFE2F1EB)),
-                      border: OutlineInputBorder(),
-                    ),
+                  TextField(controller: titleController, style: TextStyle(color: Color(0xFF8CDDBB)), decoration: InputDecoration(labelText: 'Title', labelStyle: TextStyle(color: Color(0xFFE2F1EB)))),
+                  TextField(controller: descriptionController, style: TextStyle(color: Color(0xFF8CDDBB)), decoration: InputDecoration(labelText: 'Description', labelStyle: TextStyle(color: Color(0xFFE2F1EB)))),
+                  TextField(controller: genreController, style: TextStyle(color: Color(0xFF8CDDBB)), decoration: InputDecoration(labelText: 'Genre', labelStyle: TextStyle(color: Color(0xFFE2F1EB)))),
+                  TextField(controller: castController, style: TextStyle(color: Color(0xFF8CDDBB)), decoration: InputDecoration(labelText: 'Cast', labelStyle: TextStyle(color: Color(0xFFE2F1EB)))),
+                  TextField(controller: trailerLinkController, style: TextStyle(color: Color(0xFF8CDDBB)), decoration: InputDecoration(labelText: 'Trailer Link', labelStyle: TextStyle(color: Color(0xFFE2F1EB)))),
+                  TextField(controller: directorController, style: TextStyle(color: Color(0xFF8CDDBB)), decoration: InputDecoration(labelText: 'Director', labelStyle: TextStyle(color: Color(0xFFE2F1EB)))),
+                  DropdownButtonFormField<String>(
+                    value: selectedStatus,
+                    onChanged: (value) => setState(() => selectedStatus = value),
+                    items: ['Now Showing', 'Advance Selling', 'Coming Soon'].map((category) {
+                      return DropdownMenuItem(
+                        value: category,
+                        child: Text(category, style: TextStyle(color: Color(0xFF8CDDBB))),
+                      );
+                    }).toList(),
+                    dropdownColor: Color(0xFF07130E),
+                    decoration: InputDecoration(labelText: 'Status', labelStyle: TextStyle(color: Color(0xFFE2F1EB))),
                   ),
-                  SizedBox(height: 8),
-                  TextField(
-                    controller: descriptionController,
-                    style: TextStyle(color: Color(0xFFE2F1EB)),
-                    decoration: InputDecoration(
-                      labelText: 'Movie Description',
-                      labelStyle: TextStyle(color: Color(0xFFE2F1EB)),
-                      border: OutlineInputBorder(),
-                    ),
+                  SwitchListTile(
+                    title: Text("Use URL for Poster", style: TextStyle(color: Color(0xFFE2F1EB))),
+                    value: useUrlForPoster,
+                    onChanged: (value) => setState(() => useUrlForPoster = value),
                   ),
-                  SizedBox(height: 8),
-                  TextField(
-                    controller: genreController,
-                    style: TextStyle(color: Color(0xFFE2F1EB)),
-                    decoration: InputDecoration(
-                      labelText: 'Genre',
-                      labelStyle: TextStyle(color: Color(0xFFE2F1EB)),
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  TextField(
-                    controller: castController,
-                    style: TextStyle(color: Color(0xFFE2F1EB)),
-                    decoration: InputDecoration(
-                      labelText: 'Cast (comma-separated)',
-                      labelStyle: TextStyle(color: Color(0xFFE2F1EB)),
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  TextField(
-                    controller: trailerLinkController,
-                    style: TextStyle(color: Color(0xFFE2F1EB)),
-                    decoration: InputDecoration(
-                      labelText: 'Trailer Link',
-                      labelStyle: TextStyle(color: Color(0xFFE2F1EB)),
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  TextField(
-                    controller: posterUrlController,
-                    style: TextStyle(color: Color(0xFFE2F1EB)),
-                    decoration: InputDecoration(
-                      labelText: 'Poster URL',
-                      labelStyle: TextStyle(color: Color(0xFFE2F1EB)),
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  TextField(
-                    controller: directorController,
-                    style: TextStyle(color: Color(0xFFE2F1EB)),
-                    decoration: InputDecoration(
-                      labelText: 'Director',
-                      labelStyle: TextStyle(color: Color(0xFFE2F1EB)),
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  TextField(
-                    controller: statusController,
-                    style: TextStyle(color: Color(0xFFE2F1EB)),
-                    decoration: InputDecoration(
-                      labelText: 'Status (e.g., Now Showing, Advance Selling, Coming Soon)',
-                      labelStyle: TextStyle(color: Color(0xFFE2F1EB)),
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  SizedBox(height: 16),
+                  useUrlForPoster
+                      ? TextField(controller: posterUrlController, style: TextStyle(color: Color(0xFF8CDDBB)), decoration: InputDecoration(labelText: 'Poster URL', labelStyle: TextStyle(color: Color(0xFFE2F1EB))))
+                      : ElevatedButton(onPressed: _pickImage, child: Text('Upload Poster')),
+                  if (!useUrlForPoster && selectedImageName != null)
+                    Text('Selected Poster: $selectedImageName', style: TextStyle(color: Color(0xFFE2F1EB))),
+                  SizedBox(height: 10),
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       final title = titleController.text.trim();
                       final description = descriptionController.text.trim();
                       final genre = genreController.text.trim();
                       final cast = castController.text.trim().split(',').map((e) => e.trim()).toList();
                       final trailerLink = trailerLinkController.text.trim();
-                      final posterUrl = posterUrlController.text.trim();
                       final director = directorController.text.trim();
-                      final status = statusController.text.trim();
+                      final posterUrl = useUrlForPoster ? posterUrlController.text.trim() : '';
 
-                      if (title.isNotEmpty &&
-                          description.isNotEmpty &&
-                          genre.isNotEmpty &&
-                          trailerLink.isNotEmpty &&
-                          posterUrl.isNotEmpty &&
-                          director.isNotEmpty &&
-                          status.isNotEmpty) {
-                        _addMovie(title, description, genre, cast, trailerLink, posterUrl, director, status);
-                        titleController.clear();
-                        descriptionController.clear();
-                        genreController.clear();
-                        castController.clear();
-                        trailerLinkController.clear();
-                        posterUrlController.clear();
-                        directorController.clear();
-                        statusController.clear();
+                      if (title.isNotEmpty && description.isNotEmpty && genre.isNotEmpty && trailerLink.isNotEmpty && director.isNotEmpty && selectedStatus != null && ((useUrlForPoster && posterUrl.isNotEmpty) || (!useUrlForPoster && selectedImageBytes != null))) {
+                        if (!useUrlForPoster && selectedImageBytes != null) {
+                          final uploadedUrl = await _uploadImageToSupabase(selectedImageBytes!, selectedStatus!, selectedImageName!);
+                          _addMovie(title, description, genre, cast, trailerLink, director, uploadedUrl);
+                        } else {
+                          _addMovie(title, description, genre, cast, trailerLink, director, posterUrl);
+                        }
                       } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Please fill in all fields')),
-                        );
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please fill in all fields')));
                       }
                     },
-                    style: ElevatedButton.styleFrom(backgroundColor: Color(0xFFE2F1EB)),
-                    child: Text('Add Movie', style: TextStyle(color: Color(0xFF07130E))),
+                    child: Text('Add Movie'),
                   ),
-                  SizedBox(height: 16),
                 ],
               ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            _isAddMoviePanelVisible = !_isAddMoviePanelVisible; // Toggle panel visibility
-          });
-        },
-        backgroundColor: Color(0xFF8CDDBB),
-        child: Icon(
-          _isAddMoviePanelVisible ? Icons.close : Icons.add,
-          color: Colors.black,
-        ),
+        onPressed: () => setState(() => _isAddMoviePanelVisible = !_isAddMoviePanelVisible),
+        child: Icon(_isAddMoviePanelVisible ? Icons.close : Icons.add),
       ),
     );
   }
