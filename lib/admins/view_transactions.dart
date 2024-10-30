@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 class ViewTransactionsPage extends StatefulWidget {
   const ViewTransactionsPage({super.key});
@@ -11,13 +13,8 @@ class ViewTransactionsPage extends StatefulWidget {
 
 class _ViewTransactionsPageState extends State<ViewTransactionsPage> {
   final supabase = Supabase.instance.client;
-  List<TransactionData> transactions = [
-    TransactionData(id: 'tx001', amount: 150.0, status: 'Paid'),
-    TransactionData(id: 'tx002', amount: 200.0, status: 'Pending'),
-    TransactionData(id: 'tx003', amount: 350.0, status: 'Cancelled'),
-    TransactionData(id: 'tx004', amount: 120.0, status: 'Paid'),
-    TransactionData(id: 'tx005', amount: 500.0, status: 'Paid'),
-  ];
+  List<TransactionData> transactions = [];
+  final TextEditingController _codeController = TextEditingController();
 
   @override
   void initState() {
@@ -30,23 +27,77 @@ class _ViewTransactionsPageState extends State<ViewTransactionsPage> {
   Future<void> _fetchTransactions() async {
     try {
       final response = await supabase.from('transactions').select();
-      if (response.isEmpty) {
-        // Add mock data if no data exists in the table
-        setState(() {
-          transactions = [
-            TransactionData(id: 'mock_tx001', amount: 100.0, status: 'Paid'),
-            TransactionData(id: 'mock_tx002', amount: 200.0, status: 'Pending'),
-            TransactionData(id: 'mock_tx003', amount: 300.0, status: 'Cancelled'),
-          ];
-        });
-      } else {
-        setState(() {
-          transactions = response.map((e) => TransactionData.fromJson(e)).toList();
-        });
-      }
-        } catch (error) {
+      setState(() {
+        transactions = response.isNotEmpty
+            ? response.map((e) => TransactionData.fromJson(e)).toList()
+            : [];
+      });
+    } catch (error) {
       print('Error fetching transactions: $error');
     }
+  }
+
+  Future<void> _verifyTransaction(String qrData) async {
+  final response = await supabase
+      .from('transactions')
+      .select()
+      .eq('id', qrData)
+      .maybeSingle();
+
+  if (response == null) {
+    _showMessage('Invalid or Unmatched QR Code');
+  } else {
+    final transaction = TransactionData.fromJson(response);
+    _showTransactionDetails(transaction);
+  }
+}
+
+
+  Future<void> _verifyByCode(String code) async {
+    final response = await supabase
+        .from('transactions')
+        .select()
+        .eq('unique_code', code)
+        .maybeSingle();
+
+    if (response == null) {
+      _showMessage('Invalid or Unmatched Code');
+    } else {
+      final transaction = TransactionData.fromJson(response);
+      _showTransactionDetails(transaction);
+    }
+  }
+
+  void _showTransactionDetails(TransactionData transaction) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Transaction Details'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Transaction ID: ${transaction.id}'),
+              Text('Amount: ₱${transaction.amount}'),
+              Text('Status: ${transaction.status}'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
@@ -58,41 +109,111 @@ class _ViewTransactionsPageState extends State<ViewTransactionsPage> {
           'View Transactions',
           style: GoogleFonts.lexend(color: Color(0xFFE2F1EB)),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.qr_code_scanner, color: Color(0xFFE2F1EB)),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => _buildQRScanner()),
+              );
+            },
+            tooltip: 'Scan QR Code',
+          ),
+        ],
       ),
       backgroundColor: Color(0xFF07130E),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: transactions.isEmpty
-            ? Center(
-                child: CircularProgressIndicator(),
-              )
-            : ListView.builder(
-                itemCount: transactions.length,
-                itemBuilder: (context, index) {
-                  final transaction = transactions[index];
-                  return Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: BorderSide(
-                        color: Color(0xFF40E49F).withOpacity(0.6),
-                        width: 2,
-                      ),
-                    ),
-                    color: Color(0xFF07130E),
-                    child: ListTile(
-                      title: Text(
-                        'Transaction ID: ${transaction.id}',
-                        style: GoogleFonts.lexend(color: Color(0xFFE2F1EB)),
-                      ),
-                      subtitle: Text(
-                        'Amount: ₱${transaction.amount}\nStatus: ${transaction.status}',
-                        style: GoogleFonts.lexend(color: Color(0xFF8CDDBB)),
-                      ),
-                    ),
-                  );
-                },
+        child: Column(
+          children: [
+            // Input field to verify by unique code
+            TextField(
+              controller: _codeController,
+              decoration: InputDecoration(
+                labelText: 'Enter Unique Code',
+                labelStyle: GoogleFonts.lexend(color: Colors.white),
+                filled: true,
+                fillColor: Color(0xFF07130E),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                  borderSide: BorderSide(color: Color(0xFF8CDDBB)), // Green stroke color
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                  borderSide: BorderSide(color: Color(0xFF8CDDBB)), // Green stroke color
+                ),
               ),
+              style: GoogleFonts.lexend(color: Colors.white),
+            ),
+            SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: () => _verifyByCode(_codeController.text.trim()),
+              child: Text('Verify Code'),
+            ),
+            SizedBox(height: 16),
+            Expanded(
+              child: transactions.isEmpty
+                  ? Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      itemCount: transactions.length,
+                      itemBuilder: (context, index) {
+                        final transaction = transactions[index];
+                        return Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            side: BorderSide(
+                              color: Color(0xFF40E49F).withOpacity(0.6),
+                              width: 2,
+                            ),
+                          ),
+                          color: Color(0xFF07130E),
+                          child: ListTile(
+                            title: Text(
+                              'Transaction ID: ${transaction.id}',
+                              style: GoogleFonts.lexend(color: Color(0xFFE2F1EB)),
+                            ),
+                            subtitle: Text(
+                              'Amount: ₱${transaction.amount}\nStatus: ${transaction.status}',
+                              style: GoogleFonts.lexend(color: Color(0xFF8CDDBB)),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildQRScanner() {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("QR Scanner"),
+        backgroundColor: Color(0xFF07130E),
+      ),
+      body: kIsWeb
+          ? Center(
+              child: Text(
+                'QR scanning is only supported on mobile devices or specific web browsers.',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+                textAlign: TextAlign.center,
+              ),
+            )
+          : MobileScanner(
+              onDetect: (barcode) {
+                if (barcode.barcodes.isNotEmpty) {
+                  final qrData = barcode.barcodes.first.rawValue;
+                  if (qrData != null) {
+                    _verifyTransaction(qrData);
+                  } else {
+                    _showMessage('Failed to scan QR Code');
+                  }
+                }
+              },
+            ),
     );
   }
 }
